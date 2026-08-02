@@ -3,11 +3,13 @@ package com.eazybytes.jobportal;
 import com.eazybytes.jobportal.config.web.WebConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
+@EnableJpaAuditing(auditorAwareRef = "auditorAwareImpl")
 @SpringBootApplication
 public class JobportalApplication {
 
-	public static void main(String[] args) {
+	static void main(String[] args) {
 		SpringApplication.run(JobportalApplication.class, args);
 	}
 
