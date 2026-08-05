@@ -6,6 +6,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -36,15 +41,6 @@ public class JobPortalSecurityConfig {
                     securedPaths.forEach(path -> requests.requestMatchers(path).authenticated());
                     requests.anyRequest().denyAll();
                 })
-//                            requests.requestMatchers("/api/companies/public").permitAll()
-//                            .requestMatchers("/api/contacts/public").permitAll())
-//                            requests.requestMatchers(RegexRequestMatcher.regexMatcher(".*public$")).permitAll()
-//                                    .requestMatchers("/api/swagger-ui.html",
-//                                            "/swagger-ui/**",
-//                                            "/api/v3/api-docs/**",
-//                                            "/swagger-resources/**",
-//                                            "/swagger-ui.html",
-//                                            "/webjars/**").permitAll())
                 .formLogin(flc -> flc.disable() )
                 .httpBasic(withDefaults())
                 .build();
@@ -62,5 +58,19 @@ public class JobPortalSecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService(){
+        var user1 = User.builder().username("Mugdha").password("$2a$10$8Mr32mB3GxYFcY8hpbPau.1w1Vxd6aQ7dhYfRIsZ9RXuEbJU.h1zW")
+                .roles("USER").build();
+        var user2 = User.builder().username("admin").password("$2a$10$V1nUkd33RJ/zp/HR81/jNeJ/vKLzDLUupkO5n7pTiZY/CC8s13H/q")
+                .roles("ADMIN").build();
+        return new InMemoryUserDetailsManager(user1,user2);
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder(){
+        return new BCryptPasswordEncoder();
     }
 }
