@@ -12,6 +12,7 @@ public class PathsConfig {
         return List.of(
                 "/api/auth/register/public",
                 "/api/auth/login/public",
+                "/api/csrf-token/public",
                 "/api/contacts/public",
                 "/api/swagger-ui.html",
                 "/swagger-ui/**",

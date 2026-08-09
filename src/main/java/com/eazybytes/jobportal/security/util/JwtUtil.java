@@ -1,5 +1,6 @@
 package com.eazybytes.jobportal.security.util;
 
+import com.eazybytes.jobportal.entity.JobPortalUser;
 import lombok.RequiredArgsConstructor;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -26,9 +27,11 @@ public class JwtUtil {
         String secret = env.getProperty(JWT_SECRET_KEY,
                 JWT_SECRET_DEFAULT_VALUE);
         SecretKey secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        var fetchedUser = (User) authentication.getPrincipal();
+        var fetchedUser = (JobPortalUser) authentication.getPrincipal();
         jwtToken = Jwts.builder().issuer("Job Portal").subject("JWT Token")
-                .claim("username", fetchedUser.getUsername())
+                .claim("username", fetchedUser.getName())
+                .claim("email", fetchedUser.getEmail())
+                .claim("mobileNumber", fetchedUser.getMobileNumber())
                 .claim("roles", authentication.getAuthorities().stream().map(
                         GrantedAuthority::getAuthority).collect(Collectors.joining(",")))
                 .issuedAt(new java.util.Date())

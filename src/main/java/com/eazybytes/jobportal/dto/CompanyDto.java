@@ -1,7 +1,5 @@
 package com.eazybytes.jobportal.dto;
 
-import com.eazybytes.jobportal.entity.JobDto;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;

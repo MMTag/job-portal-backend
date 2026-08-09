@@ -3,7 +3,7 @@ package com.eazybytes.jobportal.company.service.impl;
 import com.eazybytes.jobportal.dto.CompanyDto;
 import com.eazybytes.jobportal.entity.Company;
 import com.eazybytes.jobportal.entity.Job;
-import com.eazybytes.jobportal.entity.JobDto;
+import com.eazybytes.jobportal.dto.JobDto;
 import com.eazybytes.jobportal.repository.CompanyRepository;
 import com.eazybytes.jobportal.company.service.ICompanyService;
 import org.springframework.beans.factory.annotation.Autowired;

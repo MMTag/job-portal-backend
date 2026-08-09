@@ -1,4 +1,4 @@
-package com.eazybytes.jobportal.entity;
+package com.eazybytes.jobportal.dto;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
