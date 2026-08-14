@@ -1,5 +1,6 @@
 package com.eazybytes.jobportal.contact.contoller;
 
+import com.eazybytes.jobportal.constants.ApplicationConstants;
 import com.eazybytes.jobportal.contact.service.IContactService;
 import com.eazybytes.jobportal.contact.service.impl.ContactServiceImpl;
 import com.eazybytes.jobportal.dto.ContactRequestDto;
@@ -9,6 +10,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -55,5 +57,27 @@ public class ContactController {
         List<ContactResponseDto> contactResponseDtos = contactService
                 .fetchNewContactMsgsWithSort(sortBy, sortDir);
         return ResponseEntity.status(HttpStatus.OK).body(contactResponseDtos);
+    }
+
+    @GetMapping("/page/admin")
+    public ResponseEntity<Page<ContactResponseDto>> fetchNewContactMsgsWithPaginationAndSort(
+            @RequestParam(defaultValue = "0") int pageNumber,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir) {
+        Page<ContactResponseDto> contactResponseDtoPage = contactService
+                .fetchNewContactMsgsWithPaginationAndSort(pageNumber, pageSize, sortBy, sortDir);
+        return ResponseEntity.status(HttpStatus.OK).body(contactResponseDtoPage);
+    }
+
+    @PatchMapping("/{id}/status/admin")
+    public ResponseEntity<String> closeContactMsg(@PathVariable String id) {
+        boolean isUpdated = contactService.closeContactMsg(Long.valueOf(id),
+                ApplicationConstants.CLOSED_MESSAGE);
+        if (isUpdated) {
+            return ResponseEntity.status(HttpStatus.OK).body("Contact message updated successfully.");
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Failed to update contact message.");
+        }
     }
 }
