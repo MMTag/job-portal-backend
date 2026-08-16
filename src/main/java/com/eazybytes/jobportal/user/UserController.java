@@ -27,8 +27,8 @@ public class UserController {
         }
     }
 
-    @PatchMapping("${userId}/role/employer/admin")
-    ResponseEntity<?> elevateToEmployer(@PathVariable Long userId){
+    @PatchMapping("/{userId}/role/employer/admin")
+    public ResponseEntity<?> elevateToEmployer(@PathVariable Long userId) {
         UserDto updatedUser = userService.elevateToEmployer(userId);
         return ResponseEntity.ok(updatedUser);
     }

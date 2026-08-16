@@ -9,6 +9,9 @@ import com.eazybytes.jobportal.repository.CompanyRepository;
 import com.eazybytes.jobportal.company.service.ICompanyService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +29,7 @@ public class CompanyServiceImpl implements ICompanyService {
         this.companyRepository = companyRepository;
     }
 
+    @Cacheable("companies")
     @Override
     public List<CompanyDto> getAllCompanies() {
         List<Company> companyList =companyRepository.findAllWithJobsByStatus(ApplicationConstants.ACTIVE_STATUS);
@@ -47,6 +51,8 @@ public class CompanyServiceImpl implements ICompanyService {
                 company.getLocations(),company.getFounded(),company.getDescription(),
                 company.getEmployees(),company.getWebsite(),company.getCreatedAt(),jobDtos);
     }
+
+    @Cacheable("companies")
     @Override
     public List<CompanyDto> getAllCompaniesForAdmin() {
         List<Company> companyList =companyRepository.findAll();
@@ -59,6 +65,7 @@ public class CompanyServiceImpl implements ICompanyService {
         companyRepository.deleteById(id);
     }
 
+    @CacheEvict(value="companies",allEntries = true)
     @Transactional
     @Override
     public boolean updateCompanyDetails(Long id, CompanyDto companyDto) {
