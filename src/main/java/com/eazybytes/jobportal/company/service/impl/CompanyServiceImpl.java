@@ -7,6 +7,7 @@ import com.eazybytes.jobportal.entity.Job;
 import com.eazybytes.jobportal.dto.JobDto;
 import com.eazybytes.jobportal.repository.CompanyRepository;
 import com.eazybytes.jobportal.company.service.ICompanyService;
+import com.eazybytes.jobportal.util.ApplicationUtility;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -44,7 +45,7 @@ public class CompanyServiceImpl implements ICompanyService {
 
     private CompanyDto transformCompanyToDto(Company company){
         List<JobDto> jobDtos = company.getJobs().stream()
-                .map(this::transformJobToDto)
+                .map(ApplicationUtility::transformJobToDto)
                 .collect(Collectors.toList());
         return new CompanyDto(company.getId(),company.getName(),company.getLogo(),
                 company.getIndustry(),company.getSize(),company.getRating(),
@@ -84,36 +85,6 @@ public class CompanyServiceImpl implements ICompanyService {
         Company company = transformCompanyDtoToEntity(companyDto);
         Company savedCompany = companyRepository.save(company);
         return savedCompany.getId() != null && savedCompany.getId() > 0;
-    }
-
-
-    private JobDto transformJobToDto(Job job) {
-        return new JobDto(
-                job.getId(),
-                job.getTitle(),
-                job.getCompany().getId(),
-                job.getCompany().getName(),
-                job.getCompany().getLogo(),
-                job.getLocation(),
-                job.getWorkType(),
-                job.getJobType(),
-                job.getCategory(),
-                job.getExperienceLevel(),
-                job.getSalaryMin(),
-                job.getSalaryMax(),
-                job.getSalaryCurrency(),
-                job.getSalaryPeriod(),
-                job.getDescription(),
-                job.getRequirements(),
-                job.getBenefits(),
-                job.getPostedDate(),
-                job.getApplicationDeadline(),
-                job.getApplicationsCount(),
-                job.getFeatured(),
-                job.getUrgent(),
-                job.getRemote(),
-                job.getStatus()
-        );
     }
 
     private Company transformCompanyDtoToEntity(CompanyDto companyDto) {
