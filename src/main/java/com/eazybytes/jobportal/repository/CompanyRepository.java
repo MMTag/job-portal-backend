@@ -15,7 +15,6 @@ import java.util.List;
 @Repository
 public interface CompanyRepository extends JpaRepository<Company,Long> {
 
-    @Cacheable("jobs")
     @Query("SELECT DISTINCT c FROM Company c JOIN FETCH c.jobs j WHERE j.status = :status")
     List<Company> findAllWithJobsByStatus(@Param("status") String status);
 
@@ -24,7 +23,8 @@ public interface CompanyRepository extends JpaRepository<Company,Long> {
     @Query(value = "SELECT DISTINCT c.* FROM companies c JOIN jobs j ON c.id = j.company_id WHERE j.status = ?", nativeQuery = true)
     List<Company> findAllWithJobsByStatusNative(@Param("status") String status);
 
-    List<Company> fetchCompaniesWithJobsByStatusNative(String status);
+    @Cacheable("jobs")
+    List<Company> fetchCompaniesWithJobsByStatus(@Param("status") String status);
 
     @CacheEvict(value="companies",allEntries = true)
     void deleteById(Long id);
