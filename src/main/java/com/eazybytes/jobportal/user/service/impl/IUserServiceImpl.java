@@ -1,17 +1,13 @@
 package com.eazybytes.jobportal.user.service.impl;
 
 import com.eazybytes.jobportal.constants.ApplicationConstants;
+import com.eazybytes.jobportal.dto.JobDto;
 import com.eazybytes.jobportal.dto.ProfileDto;
 import com.eazybytes.jobportal.dto.UserDto;
-import com.eazybytes.jobportal.entity.Company;
-import com.eazybytes.jobportal.entity.JobPortalUser;
-import com.eazybytes.jobportal.entity.Profile;
-import com.eazybytes.jobportal.entity.Role;
-import com.eazybytes.jobportal.repository.CompanyRepository;
-import com.eazybytes.jobportal.repository.JobPortalUserRepository;
-import com.eazybytes.jobportal.repository.ProfileRepository;
-import com.eazybytes.jobportal.repository.RoleRepository;
+import com.eazybytes.jobportal.entity.*;
+import com.eazybytes.jobportal.repository.*;
 import com.eazybytes.jobportal.user.service.IUserService;
+import com.eazybytes.jobportal.util.ApplicationUtility;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -20,7 +16,9 @@ import org.springframework.web.multipart.MultipartFile;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +28,8 @@ public class IUserServiceImpl implements IUserService {
     private final RoleRepository roleRepository;
     private final CompanyRepository companyRepository;
     private final ProfileRepository profileRepository;
-    ObjectMapper objectMapper = new ObjectMapper();
+    private final JobRepository jobRepository;
+
     @Override
     public Optional<UserDto> findUserByEmail(String email) {
         return jobPortalUserRepository.findJobPortalUserByEmail(email)
@@ -177,7 +176,135 @@ public class IUserServiceImpl implements IUserService {
         }
         return dto;
     }
+    @Transactional
+    @Override
+    public JobDto saveJob(String userEmail, Long jobId) {
+        // Validate if user exists
+        JobPortalUser user = jobPortalUserRepository.findJobPortalUserByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + userEmail));
+        // Validate job exists
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found with ID: " + jobId));
+        user.getSavedJobs().add(job);
+        // userRepository.save(user);
+        return ApplicationUtility.transformJobToDto(job);
+    }
 
+    @Transactional
+    @Override
+    public void unsaveJob(String userEmail, Long jobId) {
+        // Validate if user exists
+        JobPortalUser user = jobPortalUserRepository.findJobPortalUserByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + userEmail));
+        // Validate job exists
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found with ID: " + jobId));
+        user.getSavedJobs().remove(job);
+    }
+
+    @Override
+    public List<JobDto> getSavedJobs(String userEmail) {
+        // Validate if user exists
+        JobPortalUser user = jobPortalUserRepository.findJobPortalUserByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + userEmail));
+        return user.getSavedJobs().stream().map(ApplicationUtility::transformJobToDto)
+                .collect(Collectors.toList());
+    }
+
+//    @Transactional
+//    @Override
+//    public JobApplicationDto applyForJob(String userEmail, ApplyJobRequestDto applyJobRequestDto) {
+//        // Validate if user exists
+//        JobPortalUser user = userRepository.findJobPortalUserByEmail(userEmail)
+//                .orElseThrow(() -> new RuntimeException("User not found with email: " + userEmail));
+//        Long jobId = applyJobRequestDto.jobId();
+//        if (jobApplicationRepository.existsByUserIdAndJobId(user.getId(), jobId)) {
+//            throw new RuntimeException("You have already applied for this job");
+//        }
+//        // Validate job exists
+//        Job job = jobRepository.findById(jobId)
+//                .orElseThrow(() -> new RuntimeException("Job not found with ID: " + jobId));
+//        // Create job application
+//        JobApplication application = new JobApplication();
+//        application.setUser(user);
+//        application.setJob(job);
+//        application.setAppliedAt(Instant.now());
+//        application.setStatus(ApplicationConstants.PENDING);
+//        application.setCoverLetter(applyJobRequestDto.coverLetter());
+//        JobApplication saved = jobApplicationRepository.save(application);
+//        // Increment applications count
+//        job.setApplicationsCount(job.getApplicationsCount() != null ? job.getApplicationsCount() + 1 : 1);
+//        // jobRepository.save(job); - Optional
+//        return mapToJobApplicationDto(saved);
+//    }
+
+//    @Transactional
+//    @Override
+//    public void withdrawApplication(String userEmail, Long jobId) {
+//        // Validate if user exists
+//        JobPortalUser user = userRepository.findJobPortalUserByEmail(userEmail)
+//                .orElseThrow(() -> new RuntimeException("User not found with email: " + userEmail));
+//        if (!jobApplicationRepository.existsByUserIdAndJobId(user.getId(), jobId)) {
+//            throw new RuntimeException("You have not applied for this job");
+//        }
+//        jobApplicationRepository.deleteByUserIdAndJobId(user.getId(), jobId);
+//        // Get the job to update the count
+//        Job job = jobRepository.findById(jobId)
+//                .orElseThrow(() -> new RuntimeException("Job not found with ID: " + jobId));
+//
+//        // Decrement applications count (ensure it doesn't go below 0)
+//        if (job.getApplicationsCount() != null && job.getApplicationsCount() > 0) {
+//            job.setApplicationsCount(job.getApplicationsCount() - 1);
+//            // jobRepository.save(job); - Optional
+//        }
+//    }
+
+//    @Override
+//    public List<JobApplicationDto> getJobSeekerApplications(String userEmail) {
+//        // Validate if user exists
+//        JobPortalUser user = userRepository.findJobPortalUserByEmail(userEmail)
+//                .orElseThrow(() -> new RuntimeException("User not found with email: " + userEmail));
+//        return user.getJobApplications().stream().map(this::mapToJobApplicationDto)
+//                .collect(Collectors.toList());
+//    }
+//
+//    private JobApplicationDto mapToJobApplicationDto(JobApplication application) {
+//        // Map profile if exists
+//        ProfileDto profileDto = null;
+//        Profile profile = application.getUser().getProfile();
+//        if (profile != null) {
+//            profileDto = new ProfileDto(
+//                    profile.getId(),
+//                    profile.getUser().getId(),
+//                    profile.getJobTitle(),
+//                    profile.getLocation(),
+//                    profile.getExperienceLevel(),
+//                    profile.getProfessionalBio(),
+//                    profile.getPortfolioWebsite(),
+//                    profile.getProfilePicture(),
+//                    profile.getProfilePictureName(),
+//                    profile.getProfilePictureType(),
+//                    profile.getResume(),
+//                    profile.getResumeName(),
+//                    profile.getResumeType(),
+//                    profile.getCreatedAt(),
+//                    profile.getUpdatedAt()
+//            );
+//        }
+//        return new JobApplicationDto(
+//                application.getId(),
+//                application.getUser().getId(),
+//                application.getUser().getName(),
+//                application.getUser().getEmail(),
+//                application.getUser().getMobileNumber(),
+//                profileDto,
+//                ApplicationUtility.transformJobToDto(application.getJob()),
+//                application.getAppliedAt(),
+//                application.getStatus(),
+//                application.getCoverLetter(),
+//                application.getNotes()
+//        );
+//    }
     private UserDto mapToUserDto(JobPortalUser user) {
         UserDto dto = new UserDto();
         BeanUtils.copyProperties(user, dto);
