@@ -17,6 +17,6 @@ public class ApplicationConstants {
     public static final String  CLOSED_MESSAGE = "CLOSED";
 
     public static final String  SYSTEM = "SYSTEM";
-
+    public static final String PENDING = "PENDING";
 
 }
