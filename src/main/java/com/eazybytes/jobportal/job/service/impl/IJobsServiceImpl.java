@@ -1,10 +1,14 @@
 package com.eazybytes.jobportal.job.service.impl;
 
+import com.eazybytes.jobportal.dto.JobApplicationDto;
 import com.eazybytes.jobportal.dto.JobDto;
+import com.eazybytes.jobportal.dto.UpdateJobApplicationDto;
 import com.eazybytes.jobportal.entity.Job;
+import com.eazybytes.jobportal.entity.JobApplication;
 import com.eazybytes.jobportal.entity.JobPortalUser;
 import com.eazybytes.jobportal.job.service.IJobsService;
 import com.eazybytes.jobportal.repository.CompanyRepository;
+import com.eazybytes.jobportal.repository.JobApplicationRepository;
 import com.eazybytes.jobportal.repository.JobPortalUserRepository;
 import com.eazybytes.jobportal.repository.JobRepository;
 import com.eazybytes.jobportal.util.ApplicationUtility;
@@ -23,6 +27,7 @@ import java.util.stream.Collectors;
 public class IJobsServiceImpl implements IJobsService {
     private final JobPortalUserRepository jobPortalUserRepository;
     private final JobRepository jobRepository;
+    private final JobApplicationRepository jobApplicationRepository;
     @Override
     public List<JobDto> getEmployerJobs(String employerEmail) {
         JobPortalUser employer = jobPortalUserRepository.findJobPortalUserByEmail(employerEmail)
@@ -76,6 +81,22 @@ public class IJobsServiceImpl implements IJobsService {
         Job savedJob = jobRepository.save(job);
         return ApplicationUtility.transformJobToDto(savedJob);
     }
+
+    @Override
+    public List<JobApplicationDto> getApplicationsByJobForEmployer(Long jobId) {
+        List<JobApplication> applications = jobApplicationRepository.findByJobIdOrderByAppliedAtAsc(jobId);
+        return applications.stream()
+                .map(jobApplication -> ApplicationUtility.mapToJobApplicationDto(jobApplication))
+                .collect(Collectors.toList());
+    }
+    @Transactional
+    @Override
+    public boolean updateJobApplication(UpdateJobApplicationDto dto) {
+        int updatedRows = jobApplicationRepository.updateStatusAndNotesById(
+                dto.status().name(), dto.notes(),dto.applicationId(), ApplicationUtility.getLoggedInUser());
+        return updatedRows > 0;
+    }
+
 
     private Job transformDtoToEntity(JobDto jobDto) {
         Job job = new Job();
