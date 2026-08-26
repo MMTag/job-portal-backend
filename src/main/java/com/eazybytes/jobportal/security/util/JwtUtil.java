@@ -11,17 +11,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import com.eazybytes.jobportal.constants.ApplicationConstants;
-import com.eazybytes.jobportal.entity.JobPortalUser;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.core.env.Environment;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
@@ -30,6 +20,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
+@PropertySource(value = "classpath:jwt.properties")
 @RequiredArgsConstructor
 public class JwtUtil {
     private final Environment env;
