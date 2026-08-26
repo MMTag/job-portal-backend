@@ -1,19 +1,25 @@
 package com.eazybytes.jobportal.user.service.impl;
 
 import com.eazybytes.jobportal.constants.ApplicationConstants;
+import com.eazybytes.jobportal.dto.ProfileDto;
 import com.eazybytes.jobportal.dto.UserDto;
 import com.eazybytes.jobportal.entity.Company;
 import com.eazybytes.jobportal.entity.JobPortalUser;
+import com.eazybytes.jobportal.entity.Profile;
 import com.eazybytes.jobportal.entity.Role;
 import com.eazybytes.jobportal.repository.CompanyRepository;
 import com.eazybytes.jobportal.repository.JobPortalUserRepository;
+import com.eazybytes.jobportal.repository.ProfileRepository;
 import com.eazybytes.jobportal.repository.RoleRepository;
 import com.eazybytes.jobportal.user.service.IUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import tools.jackson.databind.ObjectMapper;
 
+import java.io.IOException;
 import java.util.Optional;
 
 @Service
@@ -23,6 +29,8 @@ public class IUserServiceImpl implements IUserService {
     private final JobPortalUserRepository jobPortalUserRepository;
     private final RoleRepository roleRepository;
     private final CompanyRepository companyRepository;
+    private final ProfileRepository profileRepository;
+    ObjectMapper objectMapper = new ObjectMapper();
     @Override
     public Optional<UserDto> findUserByEmail(String email) {
         return jobPortalUserRepository.findJobPortalUserByEmail(email)
@@ -71,6 +79,103 @@ public class IUserServiceImpl implements IUserService {
         user.setCompany(company);
         // JobPortalUser updatedUser = userRepository.save(user);
         return mapToUserDto(user);
+    }
+
+    @Transactional
+    @Override
+    public ProfileDto createOrUpdateProfile(String userEmail, String profileJson, MultipartFile profilePicture, MultipartFile resume) {
+        JobPortalUser user = jobPortalUserRepository.findJobPortalUserByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + userEmail));
+        Profile profile = user.getProfile();
+        if (null == profile) {
+            profile = new Profile();
+            profile.setUser(user);
+        }
+        ObjectMapper objectMapper = new ObjectMapper();
+        // Parse JSON string to ProfileDto
+        ProfileDto profileDto = objectMapper.readValue(profileJson, ProfileDto.class);
+        Profile savedProfile = profileRepository.save(mapToProfile(profile, profileDto, profilePicture, resume));
+        return mapToProfileDto(savedProfile, false);
+    }
+
+    @Override
+    public ProfileDto getProfile(String userEmail) {
+        JobPortalUser user = jobPortalUserRepository.findJobPortalUserByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + userEmail));
+        if(user.getProfile() == null){
+            return null;
+        }
+        return mapToProfileDto(user.getProfile(),false);
+    }
+
+    @Override
+    public ProfileDto getProfilePicture(String userEmail) {
+        JobPortalUser user = jobPortalUserRepository.findJobPortalUserByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + userEmail));
+        if (user.getProfile() == null) {
+            return null;
+        }
+        return mapToProfileDto(user.getProfile(), true);
+    }
+
+    @Override
+    public ProfileDto getResume(String userEmail) {
+        JobPortalUser user = jobPortalUserRepository.findJobPortalUserByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + userEmail));
+        if (user.getProfile() == null) {
+            return null;
+        }
+        return mapToProfileDto(user.getProfile(), true);
+    }
+
+    private Profile mapToProfile(Profile profile, ProfileDto profileDto,
+                                 MultipartFile profilePicture, MultipartFile resume) {
+        // Update text fields
+        profile.setJobTitle(profileDto.jobTitle());
+        profile.setLocation(profileDto.location());
+        profile.setExperienceLevel(profileDto.experienceLevel());
+        profile.setProfessionalBio(profileDto.professionalBio());
+        profile.setPortfolioWebsite(profileDto.portfolioWebsite());
+        // Handle profile picture upload
+        if (profilePicture != null && !profilePicture.isEmpty()) {
+            try {
+                profile.setProfilePicture(profilePicture.getBytes());
+                profile.setProfilePictureName(profilePicture.getOriginalFilename());
+                profile.setProfilePictureType(profilePicture.getContentType());
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to upload profile picture", e);
+            }
+        }
+        // Handle resume upload
+        if (resume != null && !resume.isEmpty()) {
+            try {
+                profile.setResume(resume.getBytes());
+                profile.setResumeName(resume.getOriginalFilename());
+                profile.setResumeType(resume.getContentType());
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to upload resume", e);
+            }
+        }
+        return profile;
+    }
+
+    private ProfileDto mapToProfileDto(Profile profile, boolean includeBinaryData) {
+        ProfileDto dto;
+        if (includeBinaryData) {
+            dto = new ProfileDto(profile.getId(), profile.getUser().getId(),
+                    profile.getJobTitle(), profile.getLocation(), profile.getExperienceLevel(),
+                    profile.getProfessionalBio(), profile.getPortfolioWebsite(), profile.getProfilePicture(),
+                    profile.getProfilePictureName(), profile.getProfilePictureType(), profile.getResume(),
+                    profile.getResumeName(), profile.getResumeType(), profile.getCreatedAt(), profile.getUpdatedAt()
+            );
+        } else {
+            dto = new ProfileDto(profile.getId(), profile.getUser().getId(),
+                    profile.getJobTitle(), profile.getLocation(), profile.getExperienceLevel(),
+                    profile.getProfessionalBio(), profile.getPortfolioWebsite(), null,
+                    profile.getProfilePictureName(), profile.getProfilePictureType(), null,
+                    profile.getResumeName(), profile.getResumeType(), profile.getCreatedAt(), profile.getUpdatedAt());
+        }
+        return dto;
     }
 
     private UserDto mapToUserDto(JobPortalUser user) {
