@@ -22,7 +22,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/posts")
+@RequestMapping("/todos")
 public class TodoController {
     private final RestClientTodoService restClientTodoService;
     private final TodoService todoService;

@@ -11,7 +11,7 @@ import org.springframework.web.service.annotation.PutExchange;
 
 import java.util.List;
 
-@HttpExchange(url="https://jsonplaceholder.typicode.com/todos")
+@HttpExchange//(url="https://jsonplaceholder.typicode.com/todos")
 public interface TodoService {
 
     @GetExchange
